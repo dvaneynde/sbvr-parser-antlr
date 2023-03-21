@@ -1,3 +1,6 @@
+# Antlr
+.antlr
+
 # Maven build folders
 target/
 # ... but not code generation targets
