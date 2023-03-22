@@ -17,27 +17,30 @@ import org.junit.Test;
 public class ValidateSomeRulesTest
 {
     @Test
-    public void testApp() {
+    public void testAFewRules() {
+        testRule("It is obligatory that someField has not assigned ABC value", false);
+        testRule("It is prohibited that Runway has assigned lengthStrip value", false);
+        testRule("It is prohibited that Runway has assigned lengthStrip value has and lengthStrip.uom value not equal-to ('FT','M')", false);
+    }
+
+    private void testRule(String msg, boolean shouldFail) {
+
         AixmSbvrLexer lexer = new AixmSbvrLexer(
-                CharStreams.fromString("It is obligatory that someField has not assigned ABC value"));
+                CharStreams.fromString(msg));
         AixmSbvrParser parser = new AixmSbvrParser(new CommonTokenStream(lexer));
-        ValidListener errListener = new ValidListener();
-        parser.addErrorListener(errListener);
+        // if (!shouldFail) {
+        //     VerboseErrorListener errListener = new VerboseErrorListener();
+        //     parser.addErrorListener(errListener);
+        // }
         ParseTree tree = parser.statement();
-
-        System.out.println(tree.toStringTree(parser)); // print LISP-style tree }}
+        if (shouldFail)
+            Assert.assertTrue(parser.getNumberOfSyntaxErrors() > 0);
+        else 
+            Assert.assertEquals(0, parser.getNumberOfSyntaxErrors());
+        System.out.println('|'+tree.toStringTree(parser)+'|'); // print LISP-style tree }}
     }
 
-    public static class ValidListener extends BaseErrorListener {
-        @Override
-        public void syntaxError(Recognizer<?, ?> recognizer, Object offendingSymbol,
-                int line, int charPositionInLine, String msg,
-                RecognitionException e) {
-            Assert.fail(msg);
-        }
-    }
-
-    public static class VerboseListener extends BaseErrorListener {
+    public static class VerboseErrorListener extends BaseErrorListener {
         @Override
         public void syntaxError(Recognizer<?, ?> recognizer, Object offendingSymbol,
                 int line, int charPositionInLine, String msg,
