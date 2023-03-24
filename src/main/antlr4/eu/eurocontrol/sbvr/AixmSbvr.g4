@@ -1,6 +1,6 @@
 grammar AixmSbvr;
 
-statement: (must | mustNot) conditions;
+statement: (must | mustNot) conditions EOF;
 must : 'It is obligatory that';
 mustNot : 'It is prohibited that';
 conditions : condition (( 'and' | 'or' ) condition )*;
@@ -38,10 +38,10 @@ multipleValues : '(' singleValue (',' singleValue)* ')';
 
 // Lexical rules
 ID          :   LETTER (LETTER|DIGIT)*;
-fragment LETTER      :   [a-zA-Z\u0080-\u00FF_] ;
+fragment LETTER      :   [a-zA-Z\u0080-\u00FF_.] ;
 fragment DIGIT : [0-9] ;
 
-STRING : '"' (ESC | ~["\\])* '"' ;
+STRING : '\'' (ESC | ~["\\])* '\'' ;
 fragment ESC : '\\' (["\\/bfnrt] | UNICODE) ;
 fragment UNICODE : 'u' HEX HEX HEX HEX ; fragment HEX : [0-9a-fA-F] ;
 INT : '0' | [1-9] [0-9]* ; // no leading zeros

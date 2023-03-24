@@ -8,6 +8,9 @@ https://ext.eurocontrol.int/aixm_confluence/display/AIXMBR/Rules+definition+usin
 
 ANTLR4 getting started https://github.com/antlr/antlr4/blob/master/doc/getting-started.md
 
+To avoid problem where only a part is processed and a later invalid part is just skipped:
+https://stackoverflow.com/questions/2579118/why-does-antlr-not-parse-the-entire-input
+
 ## Using grun
 ```bash
 mvn package
