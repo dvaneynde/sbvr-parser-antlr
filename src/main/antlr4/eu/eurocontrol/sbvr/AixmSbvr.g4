@@ -31,18 +31,18 @@ valueSimpleTestCond : name 'value' simpleTest;
 name : ID;
 val : ID;   // TODO quotes, or not, or optional?
 
-valueKeyword : 'value';        // TODO lexer?
+valueKeyword : 'value';       
 notKeyword : 'not';
 simpleTest : booleanOp (singleValue | multipleValues | name 'value'? );
 
-booleanOp :   'equal-to'        //# EqualTo
-            | 'not-equal-to'    //# NotEqualTo
-            | 'other' 'than'    //# OtherThan
-            | 'higher-than'     //# HigherThan
-            | 'less-than'       //# LessThan
-            | 'starting-with'   //# StartingWith
-            | 'equal-to-one-of' //# OneOf
-            | 'not-equal-to-one-of' //# NotOneOf
+booleanOp :   'equal-to'        
+            | 'not-equal-to'    
+            | 'other' 'than'    
+            | 'higher-than'     
+            | 'less-than'       
+            | 'starting-with'   
+            | 'equal-to-one-of' 
+            | 'not-equal-to-one-of' 
             ;
 
 singleValue : STRING;   // TODO quotes are optional
@@ -50,12 +50,9 @@ multipleValues : '(' singleValue (',' singleValue)* ')';
 
 
 // Lexical rules
-ID          :   LETTER (LETTER|DIGIT|'.')*;
+ID          :   LETTER (LETTER|DIGIT)*;
+STRING : '\'' LETTER* '\'' ;    // TODO should also be able to contain ','
 fragment LETTER      :   [a-zA-Z\u0080-\u00FF_.] ;
 fragment DIGIT : [0-9] ;
-
-STRING : '\'' (ESC | ~["\\])* '\'' ;
-fragment ESC : '\\' (["\\/bfnrt] | UNICODE) ;
-fragment UNICODE : 'u' HEX HEX HEX HEX ; fragment HEX : [0-9a-fA-F] ;
 INT : '0' | [1-9] [0-9]* ; // no leading zeros
 WS : [ \t\r\n]+ -> skip ; // Define whitespace rule, toss it out

@@ -1,5 +1,7 @@
 package eu.eurocontrol.sbvr;
 
+import eu.eurocontrol.sbvr.AixmSbvrParser.SingleValueContext;
+
 /**
  * Very quick & dirty and limited imiplementation.
  */
@@ -82,7 +84,7 @@ public class AixmSbvrVisitorImpl extends AixmSbvrBaseVisitor<String> {
     public String visitValueSimpleTestCond(AixmSbvrParser.ValueSimpleTestCondContext ctx) {
         String name = ctx.name().getText();
         String st = visit(ctx.simpleTest());
-        String s = st.replace("SIMPLE_TEST_NAME", name);
+        String s = st.replace("SIMPLE_TEST_NAME", '\"' + name + '\"');
         System.out.println("visitValueSimpleTestCond: " + s);
         return s;
     }
@@ -94,7 +96,7 @@ public class AixmSbvrVisitorImpl extends AixmSbvrBaseVisitor<String> {
             String sOp = ctx.booleanOp().getText();
             switch (sOp) {
                 case "equal-to":
-                    op = "equalTo";
+                    op = "evaluateEqualTo";
                     break;
                 default:
                     throw new RuntimeException("Not yet implemented: " + sOp);
@@ -104,7 +106,7 @@ public class AixmSbvrVisitorImpl extends AixmSbvrBaseVisitor<String> {
         if (ctx.singleValue() != null)
             throw new RuntimeException("Not yet implemented: SimpleTest.SingleValue");
         else if (ctx.multipleValues() != null)
-            args = ctx.multipleValues().getText();
+            args = visitMultipleValues(ctx.multipleValues());
         else if (ctx.name() != null)
             throw new RuntimeException("Not yet implemented: SimpleTest.Name");
         else
@@ -112,6 +114,27 @@ public class AixmSbvrVisitorImpl extends AixmSbvrBaseVisitor<String> {
 
         String s = op + '(' + "SIMPLE_TEST_NAME" + ',' + args + ")";
         System.out.println("visitSimpleTest: " + s);
+        return s;
+    }
+
+    @Override
+    public String visitSingleValue(AixmSbvrParser.SingleValueContext ctx) {
+        String s = ctx.STRING().getText().replace('\'', '"');
+        System.out.println("visitSingleValue: " + s);
+        return s;
+    }
+
+    @Override
+    public String visitMultipleValues(AixmSbvrParser.MultipleValuesContext ctx) {
+        // String[] as = new String[] { "a" };
+        String s = "new String[] ";
+        char sep = '{';
+        for (SingleValueContext sv : ctx.singleValue()) {
+            s += sep + visitSingleValue(sv);
+            sep = ',';
+        }
+        s += '}';
+        System.out.println("visitMultipleValues: " + s);
         return s;
     }
 
