@@ -1,17 +1,118 @@
 package eu.eurocontrol.sbvr;
 
-public class AixmSbvrVisitorImpl extends AixmSbvrBaseVisitor<Void> {
+/**
+ * Very quick & dirty and limited imiplementation.
+ */
+public class AixmSbvrVisitorImpl extends AixmSbvrBaseVisitor<String> {
 
-   static int nrConditions = 0;
-
-    @Override
-    public Void visitElementaryCond(AixmSbvrParser.ElementaryCondContext ctx) {
-        nrConditions++;
-        System.out.println("Visit: "+ctx.getText());
-        return super.visitChildren(ctx);
-    }
+    static int nrConditions = 0;
+    static int nrVars = 0;
 
     public int getNrConditions() {
         return nrConditions;
     }
+
+    @Override
+    public String visitStatement(AixmSbvrParser.StatementContext ctx) {
+        String sMustOrNot;
+        if (ctx.must() != null)
+            sMustOrNot = visitMust(ctx.must());
+        else
+            sMustOrNot = visitMustNot(ctx.mustNot());
+        String conditions = visitConditions(ctx.conditions());
+        return conditions + sMustOrNot;
+    }
+
+    @Override
+    public String visitMust(AixmSbvrParser.MustContext ctx) {
+        return "";
+    }
+
+    @Override
+    public String visitMustNot(AixmSbvrParser.MustNotContext ctx) {
+        String s = visitChildren(ctx);
+        s = "outcome = !outcome;\n";
+        System.out.println("visitMustNot: " + s);
+        return s;
+    }
+
+    @Override
+    public String visitConditions(AixmSbvrParser.ConditionsContext ctx) {
+        String op = ctx.andOrBooleanOp().get(0).getText();
+        String c1 = visitCondition(ctx.condition(0));
+        String c2 = visitCondition(ctx.condition(1));
+        String varC1 = "c" + nrVars++;
+        String varC2 = "c" + nrVars++;
+        String s = varC1 + " = " + c1 + ";\n" + varC2 + " = " + c2 + ";\noutcome = " + varC1
+                + (op.equals("and") ? " && " : " || ") + varC2 + ";\n";
+        return s;
+    }
+
+    @Override
+    public String visitCondition(AixmSbvrParser.ConditionContext ctx) {
+        String s = visitChildren(ctx);
+        System.out.println("visitCondition: " + s);
+        return s;
+    }
+
+    @Override
+    public String visitElementaryCond(AixmSbvrParser.ElementaryCondContext ctx) {
+        nrConditions++;
+        String s = visitChildren(ctx);
+        System.out.println("visitElementaryCond: " + s);
+        return s;
+    }
+
+    @Override
+    public String visitHasOrNotAssignedNameValueCond(AixmSbvrParser.HasOrNotAssignedNameValueCondContext ctx) {
+        {
+            String sc = visitChildren(ctx);
+            if (sc != null)
+                throw new RuntimeException("Bug");
+        }
+        boolean hasNot = ctx.notKeyword() != null;
+        String s = "checkHasAssignedValue(\"" + ctx.name().getText() + "\",\"" + ctx.val().getText() + "\",\""
+                + (hasNot ? false : true)
+                + ")";
+        System.out.println("visitHasOrNotAssignedNameValueCond: " + s);
+        return s;
+    }
+
+    @Override
+    public String visitValueSimpleTestCond(AixmSbvrParser.ValueSimpleTestCondContext ctx) {
+        String name = ctx.name().getText();
+        String st = visit(ctx.simpleTest());
+        String s = st.replace("SIMPLE_TEST_NAME", name);
+        System.out.println("visitValueSimpleTestCond: " + s);
+        return s;
+    }
+
+    @Override
+    public String visitSimpleTest(AixmSbvrParser.SimpleTestContext ctx) {
+        String op;
+        {
+            String sOp = ctx.booleanOp().getText();
+            switch (sOp) {
+                case "equal-to":
+                    op = "equalTo";
+                    break;
+                default:
+                    throw new RuntimeException("Not yet implemented: " + sOp);
+            }
+        }
+        String args;
+        if (ctx.singleValue() != null)
+            throw new RuntimeException("Not yet implemented: SimpleTest.SingleValue");
+        else if (ctx.multipleValues() != null)
+            args = ctx.multipleValues().getText();
+        else if (ctx.name() != null)
+            throw new RuntimeException("Not yet implemented: SimpleTest.Name");
+        else
+            throw new RuntimeException("Bug in SimpleTest");
+
+        String s = op + '(' + "SIMPLE_TEST_NAME" + ',' + args + ")";
+        System.out.println("visitSimpleTest: " + s);
+        return s;
+    }
+
 }

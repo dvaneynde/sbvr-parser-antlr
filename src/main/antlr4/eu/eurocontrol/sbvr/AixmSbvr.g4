@@ -3,41 +3,54 @@ grammar AixmSbvr;
 statement: (must | mustNot) conditions EOF;
 must : 'It is obligatory that';
 mustNot : 'It is prohibited that';
-conditions : condition (( 'and' | 'or' ) condition )*;
+conditions : condition (andOrBooleanOp condition )*;
+andOrBooleanOp : 'and' | 'or';
 condition : 'not'? elementaryCond ;
 elementaryCond :  quantifiedCond
                 | hasDescendantCond
                 | isDescendantOfCond
                 | refToExactlyOneCond
                 | isReferencedByAtLeastOneCond
-                | isPropertyOfCondition
-                | hasNameValueSimpleTestCondition       // HasNounConceptValueSimpleTest
-                | hasNotAssignedNameValueCondition      // HasOrNotAssignedNounConceptValueCondition
-                | valueSimpleTestCondition
+                | isPropertyOfCond
+                | hasNameValueSimpleTestCond   
+                | hasOrNotAssignedNameValueCond 
+                | valueSimpleTestCond
                 ;
 
 quantifiedCond : quantification INT name;       // TODO MultipleInteger !
 quantification : 'at-least' | 'at-most' | 'exactly' | 'more-than' | 'less-than';
-hasDescendantCond : name 'has-descendant' name value? ;
+hasDescendantCond : name 'has-descendant' name valueKeyword? ;
 refToExactlyOneCond : name 'references-to' 'exactly-one' name;
 isReferencedByAtLeastOneCond : name 'is-referenced-by' 'at-least-one' name;
 isDescendantOfCond : name 'is-descendant-of' name;
-isPropertyOfCondition : name 'is-property-of' name;
-hasNameValueSimpleTestCondition : name 'has' name (value simpleTest?)?;
-hasNotAssignedNameValueCondition : name 'has' 'not'? 'assigned' name 'value';
-valueSimpleTestCondition : name 'value' simpleTest;
+isPropertyOfCond : name 'is-property-of' name;
+hasNameValueSimpleTestCond : name 'has' name (valueKeyword simpleTest?)?;
+hasOrNotAssignedNameValueCond : name 'has' notKeyword? 'assigned' val valueKeyword;
+valueSimpleTestCond : name 'value' simpleTest;
 
 name : ID;
-value : 'value';        // TODO lexer?
+val : ID;   // TODO quotes, or not, or optional?
+
+valueKeyword : 'value';        // TODO lexer?
+notKeyword : 'not';
 simpleTest : booleanOp (singleValue | multipleValues | name 'value'? );
-booleanOp :   'equal-to' | 'not-equal-to' | 'other' 'than' | 'higher-than' | 'less-than'
-                 | 'starting-with' | 'equal-to-one-of' | 'not-equal-to-one-of';
+
+booleanOp :   'equal-to'        //# EqualTo
+            | 'not-equal-to'    //# NotEqualTo
+            | 'other' 'than'    //# OtherThan
+            | 'higher-than'     //# HigherThan
+            | 'less-than'       //# LessThan
+            | 'starting-with'   //# StartingWith
+            | 'equal-to-one-of' //# OneOf
+            | 'not-equal-to-one-of' //# NotOneOf
+            ;
+
 singleValue : STRING;   // TODO quotes are optional
 multipleValues : '(' singleValue (',' singleValue)* ')'; 
 
 
 // Lexical rules
-ID          :   LETTER (LETTER|DIGIT)*;
+ID          :   LETTER (LETTER|DIGIT|'.')*;
 fragment LETTER      :   [a-zA-Z\u0080-\u00FF_.] ;
 fragment DIGIT : [0-9] ;
 
