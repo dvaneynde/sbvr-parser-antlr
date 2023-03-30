@@ -33,7 +33,7 @@ public class AixmSbvrVisitorImpl extends AixmSbvrBaseVisitor<String> {
     @Override
     public String visitMustNot(AixmSbvrParser.MustNotContext ctx) {
         String s = visitChildren(ctx);
-        s = "outcome = !outcome;\n";
+        s = "outcome = notOutcome(outcome);\n";
         System.out.println("visitMustNot: " + s);
         return s;
     }
@@ -45,8 +45,8 @@ public class AixmSbvrVisitorImpl extends AixmSbvrBaseVisitor<String> {
         String c2 = visitCondition(ctx.condition(1));
         String varC1 = "c" + nrVars++;
         String varC2 = "c" + nrVars++;
-        String s = varC1 + " = " + c1 + ";\n" + varC2 + " = " + c2 + ";\noutcome = " + varC1
-                + (op.equals("and") ? " && " : " || ") + varC2 + ";\n";
+        String s = "Outcome outcome = new Outcome();\nOutcome "+varC1 + " = " + c1 + ";\nOutcome " + varC2 + " = " + c2 + ";\noutcome = "
+                 + (op.equals("and") ? "andOutcomes(" : "orOutcomes(") + varC1+", " + varC2 + ");\n";
         return s;
     }
 
@@ -67,11 +67,7 @@ public class AixmSbvrVisitorImpl extends AixmSbvrBaseVisitor<String> {
 
     @Override
     public String visitHasOrNotAssignedNameValueCond(AixmSbvrParser.HasOrNotAssignedNameValueCondContext ctx) {
-        {
-            String sc = visitChildren(ctx);
-            if (sc != null)
-                throw new RuntimeException("Bug");
-        }
+        // this works, but better to use visitX methods, as in visitValueSimpleTestCond()
         boolean hasNot = ctx.notKeyword() != null;
         String s = "checkHasAssignedValue(\"" + ctx.name().getText() + "\",\"" + ctx.val().getText() + "\",\""
                 + (hasNot ? false : true)
@@ -82,9 +78,10 @@ public class AixmSbvrVisitorImpl extends AixmSbvrBaseVisitor<String> {
 
     @Override
     public String visitValueSimpleTestCond(AixmSbvrParser.ValueSimpleTestCondContext ctx) {
+
         String name = ctx.name().getText();
-        String st = visit(ctx.simpleTest());
-        String s = st.replace("SIMPLE_TEST_NAME", '\"' + name + '\"');
+        String st = visitSimpleTest(ctx.simpleTest());
+        String s = "valueSimpleTest(\""+name+"\","+st+")";
         System.out.println("visitValueSimpleTestCond: " + s);
         return s;
     }
@@ -112,7 +109,7 @@ public class AixmSbvrVisitorImpl extends AixmSbvrBaseVisitor<String> {
         else
             throw new RuntimeException("Bug in SimpleTest");
 
-        String s = op + '(' + "SIMPLE_TEST_NAME" + ',' + args + ")";
+        String s = "(name,multi)->"+op+"(name,multi), "+args;
         System.out.println("visitSimpleTest: " + s);
         return s;
     }
