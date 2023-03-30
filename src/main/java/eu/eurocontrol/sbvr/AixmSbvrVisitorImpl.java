@@ -3,7 +3,7 @@ package eu.eurocontrol.sbvr;
 import eu.eurocontrol.sbvr.AixmSbvrParser.SingleValueContext;
 
 /**
- * Very quick & dirty and limited imiplementation.
+ * Very quick & very limited imiplementation. Only works with rules in App.java.
  */
 public class AixmSbvrVisitorImpl extends AixmSbvrBaseVisitor<String> {
 
@@ -32,8 +32,7 @@ public class AixmSbvrVisitorImpl extends AixmSbvrBaseVisitor<String> {
 
     @Override
     public String visitMustNot(AixmSbvrParser.MustNotContext ctx) {
-        String s = visitChildren(ctx);
-        s = "outcome = notOutcome(outcome);\n";
+        String s = "outcome = notOutcome(outcome);\n";
         System.out.println("visitMustNot: " + s);
         return s;
     }
@@ -41,11 +40,11 @@ public class AixmSbvrVisitorImpl extends AixmSbvrBaseVisitor<String> {
     @Override
     public String visitConditions(AixmSbvrParser.ConditionsContext ctx) {
         String op = ctx.andOrBooleanOp().get(0).getText();
-        String c1 = visitCondition(ctx.condition(0));
-        String c2 = visitCondition(ctx.condition(1));
+        String c0 = visitCondition(ctx.condition(0));
+        String c1 = visitCondition(ctx.condition(1));
         String varC1 = "c" + nrVars++;
         String varC2 = "c" + nrVars++;
-        String s = "Outcome outcome = new Outcome();\nOutcome "+varC1 + " = " + c1 + ";\nOutcome " + varC2 + " = " + c2 + ";\noutcome = "
+        String s = "Outcome outcome = new Outcome();\nOutcome "+varC1 + " = " + c0 + ";\nOutcome " + varC2 + " = " + c1 + ";\noutcome = "
                  + (op.equals("and") ? "andOutcomes(" : "orOutcomes(") + varC1+", " + varC2 + ");\n";
         return s;
     }
@@ -69,7 +68,7 @@ public class AixmSbvrVisitorImpl extends AixmSbvrBaseVisitor<String> {
     public String visitHasOrNotAssignedNameValueCond(AixmSbvrParser.HasOrNotAssignedNameValueCondContext ctx) {
         // this works, but better to use visitX methods, as in visitValueSimpleTestCond()
         boolean hasNot = ctx.notKeyword() != null;
-        String s = "checkHasAssignedValue(\"" + ctx.name().getText() + "\",\"" + ctx.val().getText() + "\",\""
+        String s = "checkHasAssignedValue(\"" + ctx.name().getText() + "\",\"" + ctx.val().getText() + "\","
                 + (hasNot ? false : true)
                 + ")";
         System.out.println("visitHasOrNotAssignedNameValueCond: " + s);
